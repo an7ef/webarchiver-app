@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0d0d14"/>
+<title>📦 WebArchiver</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0d0d14;
+  --s1:#13131f;
+  --s2:#1b1b2e;
+  --border:rgba(255,255,255,0.07);
+  --a1:#7c6af7;
+  --a2:#f76a8a;
+  --a3:#43e8a0;
+  --text:#eeeeff;
+  --muted:#7070a0;
+  --font:'Space Grotesk',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:14px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  min-height:100dvh;
+  padding:0 0 calc(var(--safe-b) + 40px);
+  overflow-x:hidden;
+}
+
+/* Noise + orbs */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(124,106,247,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(247,106,138,0.08) 0%, transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{
+  position:relative;z-index:1;
+  max-width:480px;margin:0 auto;
+  padding:32px 20px 0;
+  display:flex;flex-direction:column;gap:28px;
+}
+
+/* Hero */
+.hero{text-align:center;padding:12px 0 4px;}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(124,106,247,0.12);
+  border:1px solid rgba(124,106,247,0.25);
+  border-radius:30px;padding:5px 14px;
+  font-size:11px;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--a1);
+  margin-bottom:16px;
+}
+
+h1{
+  font-size:clamp(28px,8vw,36px);
+  font-weight:700;line-height:1.1;
+  letter-spacing:-1px;margin-bottom:12px;
+}
+
+h1 span{
+  background:linear-gradient(90deg,var(--a1),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+.hero-sub{
+  font-size:15px;color:var(--muted);line-height:1.6;
+  max-width:320px;margin:0 auto;
+}
+
+/* How it works */
+.how-it-works{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:20px;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+.section-label{
+  font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--a1);
+}
+
+.steps-row{
+  display:flex;gap:0;
+  counter-reset:steps;
+}
+
+.how-step{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;text-align:center;gap:6px;
+  position:relative;
+}
+
+.how-step:not(:last-child)::after{
+  content:'';
+  position:absolute;top:18px;left:60%;
+  width:80%;height:1px;
+  background:linear-gradient(90deg,var(--border),transparent);
+}
+
+.how-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--s2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+
+.how-text{font-size:11px;color:var(--muted);line-height:1.4;}
+
+/* THE BOOKMARKLET */
+.bm-card{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:22px;
+  display:flex;flex-direction:column;gap:16px;
+}
+
+.bm-link{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,var(--a1),#9b5de5);
+  color:white;text-decoration:none;
+  padding:16px 20px;border-radius:12px;
+  font-weight:700;font-size:16px;
+  box-shadow:0 4px 30px rgba(124,106,247,0.3);
+  border:none;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
+  font-family:var(--font);
+}
+
+.bm-link:active{transform:scale(0.97);box-shadow:0 2px 15px rgba(124,106,247,0.2);}
+
+.bm-hint{
+  font-size:12px;color:var(--muted);
+  text-align:center;line-height:1.5;
+}
+
+.bm-hint strong{color:var(--text);}
+
+/* Platform tabs */
+.tabs{display:flex;gap:6px;
+  background:var(--s2);
+  border-radius:10px;padding:4px;
+}
+
+.tab{
+  flex:1;padding:9px;
+  border-radius:7px;
+  text-align:center;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  color:var(--muted);border:none;background:none;
+  font-family:var(--font);
+  -webkit-tap-highlight-color:transparent;
+}
+
+.tab.active{
+  background:var(--s1);
+  color:var(--text);
+  box-shadow:0 1px 6px rgba(0,0,0,0.4);
+}
+
+.platform-content{display:none;}
+.platform-content.active{display:block;}
+
+/* Install steps */
+.install-steps{
+  display:flex;flex-direction:column;gap:10px;
+  margin-top:2px;
+}
+
+.istep{
+  display:flex;align-items:flex-start;gap:12px;
+  background:var(--s2);
+  border-radius:10px;padding:12px 14px;
+}
+
+.istep-num{
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(124,106,247,0.2);
+  border:1px solid rgba(124,106,247,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--a1);
+  flex-shrink:0;margin-top:1px;
+}
+
+.istep-body{flex:1;}
+.istep-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.istep-sub{font-size:12px;color:var(--muted);line-height:1.5;}
+
+.istep-sub code{
+  background:rgba(124,106,247,0.15);
+  border-radius:4px;padding:1px 5px;
+  font-family:var(--mono);font-size:11px;
+  color:var(--a1);
+}
+
+.note-box{
+  background:rgba(67,232,160,0.07);
+  border:1px solid rgba(67,232,160,0.2);
+  border-radius:10px;padding:12px 14px;
+  font-size:12px;color:var(--a3);
+  line-height:1.5;
+  display:flex;gap:8px;align-items:flex-start;
+}
+
+/* Test area */
+.test-card{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:20px;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+.test-btn{
+  width:100%;padding:14px;
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:var(--font);
+  font-size:14px;font-weight:600;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.test-btn:active{background:rgba(124,106,247,0.15);border-color:var(--a1);}
+
+.progress-wrap{display:none;flex-direction:column;gap:8px;}
+.progress-wrap.show{display:flex;}
+
+.prog-bar-bg{
+  height:3px;background:var(--s2);border-radius:3px;overflow:hidden;
+}
+.prog-bar{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--a1),var(--a2));
+  width:0%;transition:width .4s ease;
+}
+
+.prog-steps{display:flex;flex-direction:column;gap:6px;}
+
+.prog-step{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--muted);
+  padding:8px 12px;border-radius:8px;
+  background:var(--s2);
+  transition:all .3s;
+}
+.prog-step.active{color:var(--text);background:rgba(124,106,247,0.1);}
+.prog-step.done{color:var(--a3);}
+.prog-step.err{color:var(--a2);}
+
+.spin{
+  width:14px;height:14px;
+  border:2px solid rgba(124,106,247,0.2);
+  border-top-color:var(--a1);
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FAQ */
+.faq{display:flex;flex-direction:column;gap:8px;}
+
+.faq-item{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.faq-q{
+  width:100%;padding:14px 16px;
+  background:none;border:none;
+  color:var(--text);font-family:var(--font);
+  font-size:13px;font-weight:600;
+  text-align:left;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.faq-q::after{content:'﹢';color:var(--muted);transition:transform .2s;}
+.faq-item.open .faq-q::after{content:'−';}
+
+.faq-a{
+  display:none;
+  padding:0 16px 14px;
+  font-size:12px;color:var(--muted);line-height:1.6;
+}
+.faq-item.open .faq-a{display:block;}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:calc(var(--safe-b) + 20px);left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:30px;padding:10px 18px;
+  font-size:13px;font-weight:600;
+  white-space:nowrap;z-index:999;
+  opacity:0;transition:all .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">📦 Zero Server · Zero Account</div>
+    <h1>Archive any page.<br/><span>Straight to your phone.</span></h1>
+    <p class="hero-sub">One tap captures a full-page screenshot + the complete HTML and downloads both files directly to your device.</p>
+  </div>
+
+  <!-- How it works -->
+  <div class="how-it-works">
+    <div class="section-label">How it works</div>
+    <div class="steps-row">
+      <div class="how-step">
+        <div class="how-icon">🔖</div>
+        <div class="how-text">Save the<br/>bookmarklet</div>
+      </div>
+      <div class="how-step">
+        <div class="how-icon">🌐</div>
+        <div class="how-text">Go to any<br/>webpage</div>
+      </div>
+      <div class="how-step">
+        <div class="how-icon">📥</div>
+        <div class="how-text">Tap it →<br/>files download</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookmarklet card -->
+  <div class="bm-card">
+    <div class="section-label">Step 1 — Get the bookmarklet</div>
+
+    <a class="bm-link" id="bmLink" href="javascript:void(0)" onclick="showCopyInstructions()">
+      📦 Archive This Page
+    </a>
+
+    <p class="bm-hint">
+      <strong>Desktop:</strong> Drag this button to your bookmarks bar.<br/>
+      <strong>Mobile:</strong> See install steps below ↓
+    </p>
+  </div>
+
+  <!-- Install instructions -->
+  <div class="bm-card">
+    <div class="section-label">Step 2 — Install on your phone</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('android',this)">🤖 Android</button>
+      <button class="tab" onclick="switchTab('ios',this)">🍎 iPhone</button>
+    </div>
+
+    <!-- Android -->
+    <div class="platform-content active" id="tab-android">
+      <div class="install-steps">
+        <div class="istep">
+          <div class="istep-num">1</div>
+          <div class="istep-body">
+            <div class="istep-title">Bookmark any page in Chrome</div>
+            <div class="istep-sub">Tap ⋮ menu → <code>Add to bookmarks</code>. Name it <code>📦 Archive</code>.</div>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-num">2</div>
+          <div class="istep-body">
+            <div class="istep-title">Edit that bookmark's URL</div>
+            <div class="istep-sub">Go to ⋮ → Bookmarks → find <code>📦 Archive</code> → long-press → Edit. Delete the URL entirely.</div>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-num">3</div>
+          <div class="istep-body">
+            <div class="istep-title">Paste the bookmarklet code</div>
+            <div class="istep-sub">Tap the <strong>Copy Code</strong> button below, paste it into the URL field, save.</div>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-num">4</div>
+          <div class="istep-body">
+            <div class="istep-title">Use it on any page</div>
+            <div class="istep-sub">Go to any webpage → tap the address bar → type <code>📦</code> → tap the bookmark → files download automatically.</div>
+          </div>
+        </div>
+        <div class="note-box">
+          💡 After saving, your screenshot (PNG) and page backup (HTML) will appear in your <strong>Downloads</strong> folder.
+        </div>
+      </div>
+    </div>
+
+    <!-- iOS -->
+    <div class="platform-content" id="tab-ios">
+      <div class="install-steps">
+        <div class="istep">
+          <div class="istep-num">1</div>
+          <div class="istep-body">
+            <div class="istep-title">Bookmark this setup page in Safari</div>
+            <div class="istep-sub">Tap Share → <code>Add to Bookmarks</code>. Name it <code>📦 Archive</code>.</div>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-num">2</div>
+          <div class="istep-body">
+            <div class="istep-title">Copy the bookmarklet code</div>
+            <div class="istep-sub">Tap the <strong>Copy Code</strong> button below — it copies to your clipboard.</div>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-num">3</div>
+          <div class="istep-body">
+            <div class="istep-title">Edit the bookmark's URL</div>
+            <div class="istep-sub">Go to Bookmarks → find <code>📦 Archive</code> → tap Edit → clear the URL field → paste the copied code → Done.</div>
+          </div>
+        </div>
+        <div class="istep">
+          <div class="istep-num">4</div>
+          <div class="istep-body">
+            <div class="istep-title">Use it on any page</div>
+            <div class="istep-sub">Go to a page → tap address bar → type <code>📦</code> → tap the bookmark.<br/>Screenshot opens as image (long-press → Save to Photos or Files). HTML downloads or opens for saving.</div>
+          </div>
+        </div>
+        <div class="note-box">
+          💡 On iOS, images open in a new tab — long-press → <strong>"Save to Photos"</strong> or <strong>"Save to Files"</strong>. HTML files save directly via the Files app.
+        </div>
+      </div>
+    </div>
+
+    <button class="test-btn" onclick="copyCode()">
+      <span>📋</span> Copy Bookmarklet Code
+    </button>
+  </div>
+
+  <!-- Test on this page -->
+  <div class="test-card">
+    <div class="section-label">Try it right now</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.5;">Test the archiver on this very page to see it work before installing.</p>
+
+    <button class="test-btn" onclick="runArchive()">
+      <span>▶️</span> Test Archive on This Page
+    </button>
+
+    <div class="progress-wrap" id="progWrap">
+      <div class="prog-bar-bg"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-steps" id="progSteps"></div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <div class="section-label" style="padding:0 4px">FAQ</div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Does this work on any website?</button>
+      <div class="faq-a">It works on most sites. Some sites with heavy CSP (Content Security Policy) headers may block the screenshot library from loading. The HTML download always works regardless.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Will it capture the full scrollable page?</button>
+      <div class="faq-a">Yes — it auto-scrolls the page to trigger lazy-loaded images, then stitches a full-height screenshot. For very long pages (&gt;15,000px) it captures the visible portion to avoid memory issues on mobile.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Where do the files go?</button>
+      <div class="faq-a">Android: straight to your Downloads folder. iPhone: PNG opens in a new tab (long-press → Save to Photos or Files). HTML downloads via the Files app. Nothing is sent to any server — everything happens in your browser.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Is anything sent to a server?</button>
+      <div class="faq-a">No. The bookmarklet runs entirely inside your browser. The only external request is loading the html2canvas library from a CDN the first time (about 60KB). After that it's cached.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Can I still send to Drive or Notion later?</button>
+      <div class="faq-a">Yes — once the files are on your phone you can manually upload them anywhere: Google Drive, Notion, Dropbox, iCloud, wherever. The point is the capture always works first.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── THE BOOKMARKLET CODE ─────────────────────────────────────────────
+const BOOKMARKLET = `javascript:(function(){
+var d=document,b=d.body,pageUrl=location.href;
+if(d.getElementById('__arc_ui'))return;
+
+var ui=d.createElement('div');
+ui.id='__arc_ui';
+ui.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0d0d14;color:#eeeeff;padding:14px 18px;font-family:-apple-system,sans-serif;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 2px 20px rgba(0,0,0,0.6);';
+ui.innerHTML='<span id="__arc_ic" style="font-size:20px">⏳</span><div style="flex:1"><div id="__arc_msg">Starting…</div><div id="__arc_sub" style="font-size:11px;opacity:0.6;margin-top:2px"></div></div>';
+b.appendChild(ui);
+
+function msg(t,sub,icon){
+  d.getElementById('__arc_msg').textContent=t;
+  d.getElementById('__arc_sub').textContent=sub||'';
+  if(icon)d.getElementById('__arc_ic').textContent=icon;
+}
+function done(){setTimeout(function(){try{b.removeChild(ui);}catch{}},4000);}
+function dlBlob(blob,name){
+  var u=URL.createObjectURL(blob),a=d.createElement('a');
+  a.href=u;a.download=name;a.style.display='none';
+  b.appendChild(a);a.click();
+  setTimeout(function(){try{b.removeChild(a);}catch{}URL.revokeObjectURL(u);},1500);
+}
+function safeName(){
+  return(d.title||location.hostname).replace(/[^a-z0-9]/gi,'_').slice(0,60)+'_'+Date.now();
+}
+
+// ── STEP 1: Build self-contained HTML ───────────────────────────────
+async function buildHTML(){
+  msg('Inlining styles…','Fetching CSS files','📄');
+
+  // Inline external stylesheets
+  var links=Array.from(d.querySelectorAll('link[rel="stylesheet"]'));
+  for(var i=0;i<links.length;i++){
+    try{
+      var r=await Promise.race([fetch(links[i].href,{credentials:'include'}),new Promise((_,rj)=>setTimeout(()=>rj(),4000))]);
+      if(!r||!r.ok)continue;
+      var css=await r.text();
+      var st=d.createElement('style');
+      st.textContent=css;
+      links[i].parentNode.replaceChild(st,links[i]);
+    }catch{}
+  }
+
+  msg('Inlining images…','Converting to base64','🖼️');
+
+  // Inline images as base64
+  var imgs=Array.from(d.querySelectorAll('img[src]'));
+  var count=0;
+  for(var j=0;j<imgs.length;j++){
+    try{
+      var src=imgs[j].src;
+      if(!src||src.startsWith('data:'))continue;
+      var ir=await Promise.race([fetch(src,{credentials:'include'}),new Promise((_,rj)=>setTimeout(()=>rj(),3000))]);
+      if(!ir||!ir.ok)continue;
+      var iblob=await ir.blob();
+      if(iblob.size>1000000)continue; // skip over 1MB per image
+      var b64=await new Promise(function(res){
+        var fr=new FileReader();
+        fr.onload=function(){res(fr.result);};
+        fr.onerror=function(){res(null);};
+        fr.readAsDataURL(iblob);
+      });
+      if(b64){imgs[j].src=b64;count++;}
+    }catch{}
+    // Update progress every 5 images
+    if(j%5===0)msg('Inlining images…',(j+1)+' of '+imgs.length+' done','🖼️');
+  }
+
+  // Remove srcset so inlined src is used
+  d.querySelectorAll('img[srcset]').forEach(function(el){el.removeAttribute('srcset');});
+  d.querySelectorAll('source[srcset]').forEach(function(el){el.removeAttribute('srcset');});
+
+  // Add base tag for remaining relative links
+  if(!d.querySelector('base')){
+    var base=d.createElement('base');
+    base.href=pageUrl;
+    d.head.insertBefore(base,d.head.firstChild);
+  }
+
+  return '<!DOCTYPE html>\\n'+d.documentElement.outerHTML;
+}
+
+// ── STEP 2: Screenshot ───────────────────────────────────────────────
+function loadScript(src){
+  return new Promise(function(res,rej){
+    if(window.html2canvas){res();return;}
+    var s=d.createElement('script');
+    s.src=src;s.crossOrigin='anonymous';
+    s.onload=res;s.onerror=function(){rej(new Error('load failed'));};
+    d.head.appendChild(s);
+  });
+}
+
+// ── RUN ──────────────────────────────────────────────────────────────
+(async function(){
+  try{
+    // HTML first
+    var html=await buildHTML();
+    msg('Saving HTML…','Downloading file','💾');
+    dlBlob(new Blob([html],{type:'text/html'}),safeName()+'.html');
+
+    // Screenshot
+    msg('Loading screenshot engine…','','📸');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    msg('Capturing screenshot…','This may take a moment','📸');
+
+    var canvas=await html2canvas(b,{
+      allowTaint:true,useCORS:true,
+      scale:Math.min(window.devicePixelRatio||1,2),
+      logging:false,
+      windowWidth:d.documentElement.scrollWidth,
+      windowHeight:d.documentElement.scrollHeight,
+      scrollX:-window.scrollX,
+      scrollY:-window.scrollY,
+      width:d.documentElement.scrollWidth,
+      height:Math.min(d.documentElement.scrollHeight,14000)
+    });
+
+    msg('Saving screenshot…','Downloading PNG','💾');
+    await new Promise(function(res){
+      canvas.toBlob(function(blob){
+        if(blob)dlBlob(blob,safeName()+'.png');
+        res();
+      },'image/png');
+    });
+
+    msg('✅ All done!','Check your Downloads folder','✅');
+  }catch(e){
+    msg('❌ Error: '+e.message,'HTML may still have saved','❌');
+  }
+  done();
+})();
+})();`;
+
+// Set the actual href on the bookmark link
+document.getElementById('bmLink').href = BOOKMARKLET;
+
+// ── COPY CODE ──────────────────────────────────────────────────────
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText(BOOKMARKLET);
+    showToast('✅ Copied! Now paste it as a bookmark URL.');
+  } catch {
+    // Fallback: select from a hidden textarea
+    const ta = document.createElement('textarea');
+    ta.value = BOOKMARKLET;
+    ta.style.cssText = 'position:fixed;opacity:0;';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, 99999);
+    try {
+      document.execCommand('copy');
+      showToast('✅ Copied! Now paste it as a bookmark URL.');
+    } catch {
+      showToast('⚠️ Copy failed — try long-pressing the purple button above');
+    }
+    document.body.removeChild(ta);
+  }
+}
+
+function showCopyInstructions() {
+  copyCode();
+}
+
+// ── TABS ───────────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.platform-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ── TEST ARCHIVE (runs on this page) ──────────────────────────────
+async function runArchive() {
+  const wrap = document.getElementById('progWrap');
+  const stepsEl = document.getElementById('progSteps');
+  const bar = document.getElementById('progBar');
+
+  wrap.classList.add('show');
+  stepsEl.innerHTML = '';
+  bar.style.width = '0%';
+
+  function addStep(id, icon, text) {
+    const el = document.createElement('div');
+    el.className = 'prog-step';
+    el.id = 'ps-' + id;
+    el.innerHTML = `<span>${icon}</span><span>${text}</span>`;
+    stepsEl.appendChild(el);
+    return el;
+  }
+
+  function setActive(id) {
+    const el = document.getElementById('ps-' + id);
+    if (el) { el.classList.add('active'); el.querySelector('span').innerHTML = '<div class="spin"></div>'; }
+  }
+
+  function setDone(id, icon, txt) {
+    const el = document.getElementById('ps-' + id);
+    if (el) {
+      el.classList.remove('active'); el.classList.add('done');
+      el.innerHTML = `<span>${icon}</span><span>${txt}</span>`;
+    }
+  }
+
+  function setErr(id, txt) {
+    const el = document.getElementById('ps-' + id);
+    if (el) { el.classList.remove('active'); el.classList.add('err'); el.querySelector('span:last-child').textContent = txt; }
+  }
+
+  addStep('html', '📄', 'Save HTML');
+  addStep('load', '⏳', 'Load screenshot engine');
+  addStep('cap',  '📸', 'Capture screenshot');
+  addStep('dl',   '💾', 'Download files');
+
+  // HTML with inlining
+  setActive('html'); bar.style.width = '10%';
+  await sleep(200);
+  try {
+    // Inline stylesheets
+    const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+    for (const link of links) {
+      try {
+        const r = await Promise.race([fetch(link.href, {credentials:'include'}), sleep(4000).then(()=>{throw new Error('timeout')})]);
+        if (!r.ok) continue;
+        const css = await r.text();
+        const st = document.createElement('style');
+        st.textContent = css;
+        link.parentNode.replaceChild(st, link);
+      } catch {}
+    }
+    // Inline images
+    const imgs = Array.from(document.querySelectorAll('img[src]'));
+    let done_imgs = 0;
+    for (const img of imgs) {
+      try {
+        if (!img.src || img.src.startsWith('data:')) continue;
+        const r = await Promise.race([fetch(img.src, {credentials:'include'}), sleep(3000).then(()=>{throw new Error('timeout')})]);
+        if (!r.ok) continue;
+        const blob = await r.blob();
+        if (blob.size > 1000000) continue;
+        const b64 = await new Promise(res => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result);
+          fr.onerror = () => res(null);
+          fr.readAsDataURL(blob);
+        });
+        if (b64) { img.src = b64; done_imgs++; }
+      } catch {}
+      if (imgs.indexOf(img) % 5 === 0) {
+        document.getElementById('step-sub-0').textContent = `${imgs.indexOf(img)+1}/${imgs.length} images inlined`;
+      }
+    }
+    document.querySelectorAll('img[srcset]').forEach(el => el.removeAttribute('srcset'));
+    if (!document.querySelector('base')) {
+      const base = document.createElement('base');
+      base.href = location.href;
+      document.head.insertBefore(base, document.head.firstChild);
+    }
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    dlBlob(new Blob([html], { type: 'text/html' }), safeName() + '.html');
+    setDone('html', '✅', `HTML saved (${done_imgs} images inlined)`);
+    bar.style.width = '40%';
+  } catch(e) {
+    setErr('html', 'HTML failed: ' + e.message);
+  }
+
+  // Step 2: Load html2canvas
+  setActive('load'); bar.style.width = '40%';
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    setDone('load', '✅', 'Engine ready');
+    bar.style.width = '55%';
+  } catch(e) {
+    setErr('load', 'Load failed: ' + e.message);
+    return;
+  }
+
+  // Step 3: Capture
+  setActive('cap'); bar.style.width = '70%';
+  try {
+    const canvas = await html2canvas(document.body, {
+      allowTaint: true,
+      useCORS: true,
+      scale: Math.min(window.devicePixelRatio || 1, 2),
+      logging: false,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight,
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY,
+      width: document.documentElement.scrollWidth,
+      height: Math.min(document.documentElement.scrollHeight, 14000)
+    });
+
+    setDone('cap', '✅', 'Screenshot captured');
+    bar.style.width = '85%';
+
+    // Step 4: Download
+    setActive('dl');
+    await sleep(200);
+    await new Promise((res, rej) => {
+      canvas.toBlob(blob => {
+        if (!blob) { rej(new Error('Empty blob')); return; }
+        dlBlob(blob, safeName() + '.png');
+        res();
+      }, 'image/png');
+    });
+    setDone('dl', '✅', 'Screenshot downloaded!');
+    bar.style.width = '100%';
+    showToast('✅ Check your Downloads folder!');
+
+  } catch(e) {
+    setErr('cap', 'Screenshot failed: ' + e.message);
+    showToast('⚠️ Screenshot failed — but HTML was saved');
+  }
+}
+
+function safeName() {
+  return (document.title || location.hostname).replace(/[^a-z0-9]/gi, '_').slice(0, 60) + '_' + Date.now();
+}
+
+function dlBlob(blob, name) {
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = u; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(u); }, 1000);
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (window.html2canvas) { res(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.crossOrigin = 'anonymous';
+    s.onload = res; s.onerror = () => rej(new Error('Script load failed'));
+    document.head.appendChild(s);
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── FAQ ────────────────────────────────────────────────────────────
+function toggleFaq(btn) {
+  btn.closest('.faq-item').classList.toggle('open');
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── AUTO-DETECT PLATFORM ──────────────────────────────────────────
+if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+  document.querySelector('.tab[onclick*="ios"]').click();
+}
+</script>
+</body>
+</html>
